@@ -6,21 +6,45 @@ const NetworkMap = ({ data }) => {
     // Clear any existing SVG elements
     d3.select('#network-map').selectAll('*').remove();
 
-    // Set the dimensions and margins of the graph
-    const width = 1000;
-    const height = 800;
+    // Set the dimensions of the graph
+    const width = 1200;
+    const height = 900;
 
-    // Append the svg object to the body of the page
+    // Append the svg object to the page
     const svg = d3.select('#network-map')
       .append('svg')
       .attr('width', width)
-      .attr('height', height);
+      .attr('height', height)
+      .call(d3.zoom().on("zoom", function (event) {
+        svg.attr("transform", event.transform);
+      }))
+      .append("g");
+
+    // Add zoom and pan controls
+    const zoom = d3.zoom()
+      .scaleExtent([0.5, 5])
+      .on('zoom', (event) => svg.attr('transform', event.transform));
+
+    d3.select('#network-map svg').call(zoom);
+
+    // Scale for node colors (same color different shades for each department)
+    const color = d3.scaleOrdinal()
+      .domain(data.nodes.map(d => d.name))
+      .range(d3.schemeTableau10);
+
+    // Calculate the degree (number of connections) for each node
+    const nodeDegree = {};
+    data.links.forEach(link => {
+      nodeDegree[link.source] = (nodeDegree[link.source] || 0) + 1;
+      nodeDegree[link.target] = (nodeDegree[link.target] || 0) + 1;
+    });
 
     // Initialize the simulation with nodes and links
     const simulation = d3.forceSimulation(data.nodes)
       .force('link', d3.forceLink(data.links).id(d => d.id).distance(120))
-      .force('charge', d3.forceManyBody().strength(-500))
-      .force('center', d3.forceCenter(width / 2, height / 2));
+      .force('charge', d3.forceManyBody().strength(-100))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('collide', d3.forceCollide().radius(d => Math.sqrt(nodeDegree[d.id] || 1) * 10));
 
     // Draw links (communication lines)
     const link = svg.append('g')
@@ -39,8 +63,8 @@ const NetworkMap = ({ data }) => {
       .data(data.nodes)
       .enter()
       .append('circle')
-      .attr('r', 10)
-      .attr('fill', '#69b3a2')
+      .attr('r', d => Math.sqrt(nodeDegree[d.id] || 1) * 5)  // Size based on degree
+      .attr('fill', d => color(d.name.split(" ")[0]))
       .call(d3.drag()
         .on('start', dragstarted)
         .on('drag', dragged)
@@ -53,7 +77,7 @@ const NetworkMap = ({ data }) => {
       .data(data.nodes)
       .enter()
       .append('text')
-      .attr('dy', -3)
+      .attr('dy', -10)
       .attr('text-anchor', 'middle')
       .attr('font-size', 12)
       .text(d => d.name);
@@ -92,10 +116,40 @@ const NetworkMap = ({ data }) => {
       d.fx = null;
       d.fy = null;
     }
+
+    // Add zoom and reset buttons
+    const controls = d3.select('#network-map')
+      .append('div')
+      .style('position', 'absolute')
+      .style('top', '10px')
+      .style('right', '10px');
+
+    controls.append('button')
+      .text('+')
+      .style('display', 'block')
+      .style('margin-bottom', '5px')
+      .on('click', () => {
+        d3.select('#network-map svg').transition().call(zoom.scaleBy, 1.2);
+      });
+
+    controls.append('button')
+      .text('-')
+      .style('display', 'block')
+      .style('margin-bottom', '5px')
+      .on('click', () => {
+        d3.select('#network-map svg').transition().call(zoom.scaleBy, 0.8);
+      });
+
+    controls.append('button')
+      .text('Reset')
+      .on('click', () => {
+        d3.select('#network-map svg').transition().call(zoom.transform, d3.zoomIdentity);
+      });
+
   }, [data]);
 
   return (
-    <div id="network-map">
+    <div id="network-map" style={{ position: 'relative', width: '100%', height: '900px' }}>
       {/* D3.js visualization will be appended here */}
     </div>
   );
