@@ -2,13 +2,15 @@ import React from 'react';
 import '../styles/InfoDrawerLeft.css';
 
 const InfoDrawerLeft = ({ isOpen, node, toggleDrawer, connections }) => {
+  console.log('Received Connections in Drawer:', connections);
+
   const renderConnections = () => {
     if (!connections || connections.length === 0) {
       return <p>No connections found</p>;
     }
 
     return connections.map((connection, index) => (
-      <li key={index}>{connection.name}</li>
+      <li key={index}>{connection?.name || 'Unnamed Node'}</li>  // Fallback for undefined names
     ));
   };
 

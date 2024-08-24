@@ -9,7 +9,7 @@ const sampleData = {
     ...departments,
     ...teams,
     ...members,
-  ],
+  ].map(node => ({ ...node, id: String(node.id) })),  // Ensure all node ids are strings
   links: [
     // Executive-Level Communication
     { source: '1', target: '2' },
@@ -93,7 +93,7 @@ const sampleData = {
     { source: '79', target: '45' },
     { source: '80', target: '45' },
     { source: '81', target: '45' },
-  ]
+  ].map(link => ({ ...link, source: String(link.source), target: String(link.target) })) // Ensure all link sources and targets are strings
 };
 
 export default sampleData;

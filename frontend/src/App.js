@@ -35,12 +35,35 @@ function App() {
   // Get connections for the selected node
   const getConnections = (node) => {
     if (!node) return [];
+  
+    console.log('Node ID:', node.id);
+  
     const connections = sampleData.links
-      .filter(link => link.source === node.id || link.target === node.id)
-      .map(link => sampleData.nodes.find(n => n.id === (link.source === node.id ? link.target : link.source)))
-      .filter(connection => connection); // Filter out any undefined connections
+      .filter(link => {
+        console.log('Checking Link:', link);
+        
+        // Assuming link.source and link.target are objects, get their ids
+        const sourceId = link.source.id || link.source;  // If source is an object, get its id
+        const targetId = link.target.id || link.target;  // If target is an object, get its id
+  
+        console.log('Link Source ID:', sourceId, 'Link Target ID:', targetId);
+    
+        const isConnected = sourceId === node.id || targetId === node.id;
+        console.log('Is Connected:', isConnected);
+        return isConnected;
+      })
+      .map(link => {
+        const connectedNodeId = link.source.id === node.id ? link.target.id : link.source.id;
+        console.log('Connected Node ID:', connectedNodeId);
+        const connectedNode = sampleData.nodes.find(n => n.id === connectedNodeId);
+        console.log('Connected Node:', connectedNode);
+        return connectedNode;
+      })
+      .filter(connection => connection);
+  
+    console.log('Final Connections:', connections);
     return connections;
-  };
+  };  
 
   // Recursively get all sub-items under the selected node
   const getSubItems = (node) => {
