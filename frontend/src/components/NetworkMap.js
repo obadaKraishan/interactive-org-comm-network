@@ -3,66 +3,56 @@ import * as d3 from 'd3';
 
 const NetworkMap = ({ data }) => {
   useEffect(() => {
-    // Clear any existing SVG elements
     d3.select('#network-map').selectAll('*').remove();
 
-    // Set the dimensions of the graph
     const width = 1200;
     const height = 900;
 
-    // Append the svg object to the page
     const svg = d3.select('#network-map')
       .append('svg')
       .attr('width', width)
       .attr('height', height)
-      .call(d3.zoom().on("zoom", function (event) {
-        svg.attr("transform", event.transform);
-      }))
+      .call(d3.zoom().on("zoom", (event) => svg.attr("transform", event.transform)))
       .append("g");
 
-    // Add zoom and pan controls
     const zoom = d3.zoom()
       .scaleExtent([0.5, 5])
       .on('zoom', (event) => svg.attr('transform', event.transform));
 
     d3.select('#network-map svg').call(zoom);
 
-    // Scale for node colors based on department
     const colorScale = d3.scaleOrdinal()
       .domain(['Executive Management', 'Operations', 'Product Development', 'Quality Assurance', 'Customer Support', 'Human Resources', 'Information Technology', 'Finance', 'Marketing', 'Sales', 'Legal', 'Compliance', 'Supply Chain', 'Research & Development', 'Public Relations', 'Business Analytics', 'Corporate Strategy', 'Procurement', 'Facilities Management', 'Security'])
       .range(d3.schemeTableau10);
 
-    // Helper function to determine node color based on department and role
     const nodeColor = d => {
-      const departmentColor = colorScale(d.team ? d.team.split(' ')[0] : d.name.split(' ')[0]);
-      if (d.name.includes('(Manager)')) return d3.color(departmentColor).darker(1.5);
-      if (d.name.includes('(Team Leader)')) return d3.color(departmentColor).darker(0.5);
-      if (d.name.includes('(Member)')) return d3.color(departmentColor).brighter(0.5);
+      const departmentColor = colorScale(d.parent ? data.nodes.find(node => node.id === d.parent).name : d.name);
+      if (d.type === 'manager') return d3.color(departmentColor).darker(1.5);
+      if (d.type === 'team-leader') return d3.color(departmentColor).darker(0.5);
+      if (d.type === 'member') return d3.color(departmentColor).brighter(0.5);
       return departmentColor;
     };
 
-    // Calculate the degree (number of connections) for each node
     const nodeDegree = {};
     data.links.forEach(link => {
       nodeDegree[link.source] = (nodeDegree[link.source] || 0) + 1;
       nodeDegree[link.target] = (nodeDegree[link.target] || 0) + 1;
     });
 
-    // Determine size based on hierarchy and number of connections
     const nodeSize = d => {
-      if (d.name.includes('Team')) return Math.sqrt(nodeDegree[d.id] || 1) * 5;
-      if (d.name.includes('Department')) return Math.sqrt(nodeDegree[d.id] || 1) * 8;
-      return Math.sqrt(nodeDegree[d.id] || 1) * 10;
+      if (d.type === 'department') return Math.sqrt(nodeDegree[d.id] || 1) * 20;
+      if (d.type === 'team') return Math.sqrt(nodeDegree[d.id] || 1) * 15;
+      if (d.type === 'manager') return Math.sqrt(nodeDegree[d.id] || 1) * 10;
+      if (d.type === 'team-leader') return Math.sqrt(nodeDegree[d.id] || 1) * 7;
+      return Math.sqrt(nodeDegree[d.id] || 1) * 5;
     };
 
-    // Initialize the simulation with nodes and links
     const simulation = d3.forceSimulation(data.nodes)
       .force('link', d3.forceLink(data.links).id(d => d.id).distance(120))
       .force('charge', d3.forceManyBody().strength(-300))
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collide', d3.forceCollide().radius(d => nodeSize(d) + 10));
 
-    // Draw links (communication lines)
     const link = svg.append('g')
       .attr('class', 'links')
       .selectAll('line')
@@ -72,21 +62,19 @@ const NetworkMap = ({ data }) => {
       .attr('stroke', '#999')
       .attr('stroke-width', 2);
 
-    // Draw nodes (individuals, teams, departments)
     const node = svg.append('g')
       .attr('class', 'nodes')
       .selectAll('circle')
       .data(data.nodes)
       .enter()
       .append('circle')
-      .attr('r', d => nodeSize(d))  // Size based on degree
+      .attr('r', d => nodeSize(d))
       .attr('fill', nodeColor)
       .call(d3.drag()
         .on('start', dragstarted)
         .on('drag', dragged)
         .on('end', dragended));
 
-    // Add labels to nodes
     const label = svg.append('g')
       .attr('class', 'labels')
       .selectAll('text')
@@ -98,7 +86,6 @@ const NetworkMap = ({ data }) => {
       .attr('font-size', 12)
       .text(d => d.name);
 
-    // Update the simulation on every tick
     simulation.on('tick', () => {
       link
         .attr('x1', d => d.source.x)
@@ -115,7 +102,6 @@ const NetworkMap = ({ data }) => {
         .attr('y', d => d.y - 15);
     });
 
-    // Drag functions
     function dragstarted(event, d) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
@@ -133,7 +119,6 @@ const NetworkMap = ({ data }) => {
       d.fy = null;
     }
 
-    // Add zoom and reset buttons
     const controls = d3.select('#network-map')
       .append('div')
       .style('position', 'absolute')
