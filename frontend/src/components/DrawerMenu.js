@@ -1,27 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
+import './DrawerMenu.css';
 
-const DrawerMenu = () => {
-  const [open, setOpen] = useState(false);
-
-  const toggleDrawer = () => {
-    setOpen(!open);
-  };
-
+const DrawerMenu = ({ isOpen, toggleDrawer }) => {
   return (
-    <div className={`drawer-menu ${open ? 'open' : ''}`}>
-      <button className="toggle-button" onClick={toggleDrawer}>
-        {open ? 'Close' : 'Menu'}
-      </button>
-      {open && (
-        <nav>
-          <ul>
-            <li>Option 1</li>
-            <li>Option 2</li>
-            <li>Option 3</li>
-            {/* Add more options or links here */}
-          </ul>
-        </nav>
-      )}
+    <div className={`drawer-menu ${isOpen ? 'open' : ''}`}>
+      <button className="close-btn" onClick={toggleDrawer}>×</button>
+      <nav>
+        <ul>
+          <li><a href="#">Home</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Settings</a></li>
+        </ul>
+      </nav>
     </div>
   );
 };

@@ -1,10 +1,13 @@
 import React from 'react';
+import './Header.css';
 
-const Header = () => {
+const Header = ({ toggleDrawer }) => {
   return (
     <header className="header">
-      <h1>Organizational Communication Network</h1>
-      {/* Add action buttons here if needed */}
+      <div className="burger-icon" onClick={toggleDrawer}>
+        &#9776; {/* HTML Entity for a burger icon */}
+      </div>
+      <h1 className="header-title">Organizational Communication Network</h1>
     </header>
   );
 };

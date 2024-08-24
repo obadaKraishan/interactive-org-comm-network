@@ -1,0 +1,25 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.header {
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000;
+}
+
+.main-content {
+  flex-grow: 1;
+  margin-top: 60px; /* Adjust according to the header height */
+  overflow: hidden; /* Ensure no scrollbars are shown */
+}
+
+.footer {
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  z-index: 1000;
+}
