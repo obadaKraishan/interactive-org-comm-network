@@ -27,10 +27,19 @@ const NetworkMap = ({ data }) => {
 
     d3.select('#network-map svg').call(zoom);
 
-    // Scale for node colors (same color different shades for each department)
-    const color = d3.scaleOrdinal()
-      .domain(data.nodes.map(d => d.name))
+    // Scale for node colors based on department
+    const colorScale = d3.scaleOrdinal()
+      .domain(['Executive Management', 'Operations', 'Product Development', 'Quality Assurance', 'Customer Support', 'Human Resources', 'Information Technology', 'Finance', 'Marketing', 'Sales', 'Legal', 'Compliance', 'Supply Chain', 'Research & Development', 'Public Relations', 'Business Analytics', 'Corporate Strategy', 'Procurement', 'Facilities Management', 'Security'])
       .range(d3.schemeTableau10);
+
+    // Helper function to determine node color based on department and role
+    const nodeColor = d => {
+      const departmentColor = colorScale(d.team ? d.team.split(' ')[0] : d.name.split(' ')[0]);
+      if (d.name.includes('(Manager)')) return d3.color(departmentColor).darker(1.5);
+      if (d.name.includes('(Team Leader)')) return d3.color(departmentColor).darker(0.5);
+      if (d.name.includes('(Member)')) return d3.color(departmentColor).brighter(0.5);
+      return departmentColor;
+    };
 
     // Calculate the degree (number of connections) for each node
     const nodeDegree = {};
@@ -42,7 +51,7 @@ const NetworkMap = ({ data }) => {
     // Initialize the simulation with nodes and links
     const simulation = d3.forceSimulation(data.nodes)
       .force('link', d3.forceLink(data.links).id(d => d.id).distance(120))
-      .force('charge', d3.forceManyBody().strength(-100))
+      .force('charge', d3.forceManyBody().strength(-300))
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collide', d3.forceCollide().radius(d => Math.sqrt(nodeDegree[d.id] || 1) * 10));
 
@@ -63,8 +72,8 @@ const NetworkMap = ({ data }) => {
       .data(data.nodes)
       .enter()
       .append('circle')
-      .attr('r', d => Math.sqrt(nodeDegree[d.id] || 1) * 5)  // Size based on degree
-      .attr('fill', d => color(d.name.split(" ")[0]))
+      .attr('r', d => Math.sqrt(nodeDegree[d.id] || 1) * 7)  // Size based on degree
+      .attr('fill', nodeColor)
       .call(d3.drag()
         .on('start', dragstarted)
         .on('drag', dragged)
