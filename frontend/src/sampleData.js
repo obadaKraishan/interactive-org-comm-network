@@ -97,6 +97,14 @@ const sampleData = {
       { source: '17', target: '18' },
       { source: '19', target: '20' },
   
+      // Added additional connections for IT, Security, Finance
+      { source: '7', target: '6' }, // IT and HR connection
+      { source: '7', target: '1' }, // IT and Executive Management
+      { source: '20', target: '7' }, // Security and IT
+      { source: '20', target: '8' }, // Security and Finance
+      { source: '8', target: '1' }, // Finance and Executive Management
+      { source: '8', target: '5' }, // Finance and Customer Support
+  
       // Team-Level Communication
       { source: '21', target: '3' },
       { source: '22', target: '3' },

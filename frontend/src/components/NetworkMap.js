@@ -48,12 +48,19 @@ const NetworkMap = ({ data }) => {
       nodeDegree[link.target] = (nodeDegree[link.target] || 0) + 1;
     });
 
+    // Determine size based on hierarchy and number of connections
+    const nodeSize = d => {
+      if (d.name.includes('Team')) return Math.sqrt(nodeDegree[d.id] || 1) * 5;
+      if (d.name.includes('Department')) return Math.sqrt(nodeDegree[d.id] || 1) * 8;
+      return Math.sqrt(nodeDegree[d.id] || 1) * 10;
+    };
+
     // Initialize the simulation with nodes and links
     const simulation = d3.forceSimulation(data.nodes)
       .force('link', d3.forceLink(data.links).id(d => d.id).distance(120))
       .force('charge', d3.forceManyBody().strength(-300))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collide', d3.forceCollide().radius(d => Math.sqrt(nodeDegree[d.id] || 1) * 10));
+      .force('collide', d3.forceCollide().radius(d => nodeSize(d) + 10));
 
     // Draw links (communication lines)
     const link = svg.append('g')
@@ -72,7 +79,7 @@ const NetworkMap = ({ data }) => {
       .data(data.nodes)
       .enter()
       .append('circle')
-      .attr('r', d => Math.sqrt(nodeDegree[d.id] || 1) * 7)  // Size based on degree
+      .attr('r', d => nodeSize(d))  // Size based on degree
       .attr('fill', nodeColor)
       .call(d3.drag()
         .on('start', dragstarted)
@@ -131,26 +138,40 @@ const NetworkMap = ({ data }) => {
       .append('div')
       .style('position', 'absolute')
       .style('top', '10px')
-      .style('right', '10px');
+      .style('right', '10px')
+      .style('display', 'flex')
+      .style('flex-direction', 'column')
+      .style('gap', '10px');
 
     controls.append('button')
       .text('+')
-      .style('display', 'block')
-      .style('margin-bottom', '5px')
+      .style('padding', '5px')
+      .style('background-color', '#333')
+      .style('color', '#fff')
+      .style('border', 'none')
+      .style('border-radius', '5px')
       .on('click', () => {
         d3.select('#network-map svg').transition().call(zoom.scaleBy, 1.2);
       });
 
     controls.append('button')
       .text('-')
-      .style('display', 'block')
-      .style('margin-bottom', '5px')
+      .style('padding', '5px')
+      .style('background-color', '#333')
+      .style('color', '#fff')
+      .style('border', 'none')
+      .style('border-radius', '5px')
       .on('click', () => {
         d3.select('#network-map svg').transition().call(zoom.scaleBy, 0.8);
       });
 
     controls.append('button')
       .text('Reset')
+      .style('padding', '5px')
+      .style('background-color', '#333')
+      .style('color', '#fff')
+      .style('border', 'none')
+      .style('border-radius', '5px')
       .on('click', () => {
         d3.select('#network-map svg').transition().call(zoom.transform, d3.zoomIdentity);
       });
