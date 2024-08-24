@@ -37,15 +37,22 @@ function App() {
     if (!node) return [];
     const connections = sampleData.links
       .filter(link => link.source === node.id || link.target === node.id)
-      .map(link => sampleData.nodes.find(n => n.id === (link.source === node.id ? link.target : link.source)));
+      .map(link => sampleData.nodes.find(n => n.id === (link.source === node.id ? link.target : link.source)))
+      .filter(connection => connection); // Filter out any undefined connections
     return connections;
   };
 
-  // Get sub-items (e.g., teams under a department) for the selected node
+  // Recursively get all sub-items under the selected node
   const getSubItems = (node) => {
     if (!node) return [];
+
     const subItems = sampleData.nodes.filter(n => n.parent === node.id);
-    return subItems;
+    const allSubItems = subItems.reduce((acc, subItem) => {
+      acc.push(subItem);
+      return acc.concat(getSubItems(subItem)); // Recursively fetch sub-items
+    }, []);
+    
+    return allSubItems;
   };
 
   return (

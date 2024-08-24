@@ -8,7 +8,14 @@ const InfoDrawerRight = ({ isOpen, node, toggleDrawer, subItems }) => {
     }
 
     return items.map((item, index) => (
-      <li key={index}>{item.name}</li>
+      <li key={index}>
+        {item.name}
+        {item.children && item.children.length > 0 && (
+          <ul>
+            {renderSubItems(item.children)}
+          </ul>
+        )}
+      </li>
     ));
   };
 
