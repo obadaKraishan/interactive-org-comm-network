@@ -7,8 +7,8 @@ const NetworkMap = ({ data }) => {
     d3.select('#network-map').selectAll('*').remove();
 
     // Set the dimensions and margins of the graph
-    const width = 800;
-    const height = 600;
+    const width = 1000;
+    const height = 800;
 
     // Append the svg object to the body of the page
     const svg = d3.select('#network-map')
@@ -18,8 +18,8 @@ const NetworkMap = ({ data }) => {
 
     // Initialize the simulation with nodes and links
     const simulation = d3.forceSimulation(data.nodes)
-      .force('link', d3.forceLink(data.links).id(d => d.id).distance(100))
-      .force('charge', d3.forceManyBody().strength(-300))
+      .force('link', d3.forceLink(data.links).id(d => d.id).distance(120))
+      .force('charge', d3.forceManyBody().strength(-500))
       .force('center', d3.forceCenter(width / 2, height / 2));
 
     // Draw links (communication lines)
