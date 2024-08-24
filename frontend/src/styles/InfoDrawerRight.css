@@ -1,0 +1,17 @@
+.info-drawer-right {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 400px;
+    height: 100%;
+    background-color: #f9f9f9;
+    padding: 20px;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
+  }
+  
+  .info-drawer-right.open {
+    transform: translateX(0);
+  }
+  

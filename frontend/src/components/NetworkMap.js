@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import * as d3 from 'd3';
 
-const NetworkMap = ({ data }) => {
+const NetworkMap = ({ data, onNodeClick }) => {
   useEffect(() => {
     d3.select('#network-map').selectAll('*').remove();
 
@@ -62,7 +62,7 @@ const NetworkMap = ({ data }) => {
       .attr('stroke', '#999')
       .attr('stroke-width', 2);
 
-    const node = svg.append('g')
+      const node = svg.append('g')
       .attr('class', 'nodes')
       .selectAll('circle')
       .data(data.nodes)
@@ -70,6 +70,7 @@ const NetworkMap = ({ data }) => {
       .append('circle')
       .attr('r', d => nodeSize(d))
       .attr('fill', nodeColor)
+      .on('click', d => onNodeClick(d)) // Add this line to handle node clicks
       .call(d3.drag()
         .on('start', dragstarted)
         .on('drag', dragged)
@@ -161,8 +162,7 @@ const NetworkMap = ({ data }) => {
         d3.select('#network-map svg').transition().call(zoom.transform, d3.zoomIdentity);
       });
 
-  }, [data]);
-
+  }, [data, onNodeClick]); // Ensure `onNodeClick` is a dependency
   return (
     <div id="network-map" style={{ position: 'relative', width: '100%', height: '900px' }}>
       {/* D3.js visualization will be appended here */}
