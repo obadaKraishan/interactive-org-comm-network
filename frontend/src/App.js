@@ -6,7 +6,7 @@ import DrawerMenu from './components/DrawerMenu';
 import NetworkMap from './components/NetworkMap';
 import InfoDrawerLeft from './components/InfoDrawerLeft';
 import InfoDrawerRight from './components/InfoDrawerRight';
-import sampleData from './sampleData';
+import sampleData from './data/sampleData';
 
 function App() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -24,12 +24,20 @@ function App() {
     setIsRightDrawerOpen(true);
   };
 
+  const toggleLeftDrawer = () => {
+    setIsLeftDrawerOpen(!isLeftDrawerOpen);
+  };
+
+  const toggleRightDrawer = () => {
+    setIsRightDrawerOpen(!isRightDrawerOpen);
+  };
+
   return (
     <div className="app">
       <Header toggleDrawer={toggleDrawer} />
       <DrawerMenu isOpen={isDrawerOpen} toggleDrawer={toggleDrawer} />
-      <InfoDrawerLeft isOpen={isLeftDrawerOpen} node={selectedNode} />
-      <InfoDrawerRight isOpen={isRightDrawerOpen} node={selectedNode} />
+      <InfoDrawerLeft isOpen={isLeftDrawerOpen} node={selectedNode} toggleDrawer={toggleLeftDrawer} />
+      <InfoDrawerRight isOpen={isRightDrawerOpen} node={selectedNode} toggleDrawer={toggleRightDrawer} />
       <main className="main-content">
         <NetworkMap data={sampleData} onNodeClick={handleNodeClick} />
       </main>

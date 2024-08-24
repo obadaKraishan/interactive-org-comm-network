@@ -1,12 +1,23 @@
 import React from 'react';
 import '../styles/InfoDrawerRight.css';
 
-const InfoDrawerRight = ({ isOpen, node }) => {
+const InfoDrawerRight = ({ isOpen, node, toggleDrawer }) => {
   return (
     <div className={`info-drawer-right ${isOpen ? 'open' : ''}`}>
-      <h2>Detailed Information</h2>
-      <p>{node?.name}</p>
-      <p>{node?.details || 'More detailed information about the node will appear here.'}</p>
+      <div className="drawer-header">
+        <h2>Details</h2>
+        <button className="close-btn" onClick={toggleDrawer}>
+          <span>&rarr;</span>
+        </button>
+      </div>
+      {node && (
+        <div className="drawer-content">
+          <p>{node.details}</p>
+        </div>
+      )}
+      <div className="arrow" onClick={toggleDrawer}>
+        <span>&larr;</span>
+      </div>
     </div>
   );
 };
