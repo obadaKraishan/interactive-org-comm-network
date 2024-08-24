@@ -1,20 +1,19 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import DrawerMenu from '../components/DrawerMenu';
 import NetworkMap from '../components/NetworkMap';
-import { useComm } from '../context/CommContext';
 import sampleData from '../sampleData';
 
 const Dashboard = () => {
-  const { setCommunicationData } = useComm();
-
-  useEffect(() => {
-    // Set the sample data in context
-    setCommunicationData(sampleData);
-  }, [setCommunicationData]);
-
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Organizational Communication Network</h1>
-      <NetworkMap data={sampleData} />
+    <div className="dashboard">
+      <Header />
+      <DrawerMenu />
+      <main className="main-content">
+        <NetworkMap data={sampleData} />
+      </main>
+      <Footer />
     </div>
   );
 };

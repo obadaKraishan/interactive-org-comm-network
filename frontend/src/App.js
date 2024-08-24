@@ -1,12 +1,12 @@
 import React from 'react';
 import Dashboard from './pages/Dashboard';
-import { CommProvider } from './context/CommContext';
+import './styles/App.css';
 
 function App() {
   return (
-    <CommProvider>
+    <div className="App">
       <Dashboard />
-    </CommProvider>
+    </div>
   );
 }
 
