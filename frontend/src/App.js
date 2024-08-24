@@ -32,12 +32,38 @@ function App() {
     setIsRightDrawerOpen(!isRightDrawerOpen);
   };
 
+  // Get connections for the selected node
+  const getConnections = (node) => {
+    if (!node) return [];
+    const connections = sampleData.links
+      .filter(link => link.source === node.id || link.target === node.id)
+      .map(link => sampleData.nodes.find(n => n.id === (link.source === node.id ? link.target : link.source)));
+    return connections;
+  };
+
+  // Get sub-items (e.g., teams under a department) for the selected node
+  const getSubItems = (node) => {
+    if (!node) return [];
+    const subItems = sampleData.nodes.filter(n => n.parent === node.id);
+    return subItems;
+  };
+
   return (
     <div className="app">
       <Header toggleDrawer={toggleDrawer} />
       <DrawerMenu isOpen={isDrawerOpen} toggleDrawer={toggleDrawer} />
-      <InfoDrawerLeft isOpen={isLeftDrawerOpen} node={selectedNode} toggleDrawer={toggleLeftDrawer} />
-      <InfoDrawerRight isOpen={isRightDrawerOpen} node={selectedNode} toggleDrawer={toggleRightDrawer} />
+      <InfoDrawerLeft 
+        isOpen={isLeftDrawerOpen} 
+        node={selectedNode} 
+        toggleDrawer={toggleLeftDrawer} 
+        connections={getConnections(selectedNode)} 
+      />
+      <InfoDrawerRight 
+        isOpen={isRightDrawerOpen} 
+        node={selectedNode} 
+        toggleDrawer={toggleRightDrawer} 
+        subItems={getSubItems(selectedNode)} 
+      />
       <main className="main-content">
         <NetworkMap data={sampleData} onNodeClick={handleNodeClick} />
       </main>

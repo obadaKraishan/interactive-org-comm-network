@@ -36,14 +36,24 @@
   padding: 16px;
 }
 
-.arrow {
-  position: absolute;
+.arrow-left {
+  position: fixed; /* Stay outside */
   top: 50%;
-  left: 100%;
-  transform: translateY(-50%);
+  left: 20px; /* Position it just outside the drawer */
+  transform: translate(-100%, -50%); /* Move it completely outside and center vertically */
   background-color: #ddd;
   padding: 5px;
   cursor: pointer;
   border-radius: 0 5px 5px 0;
-  z-index: 2000; /* Ensure the arrow is above other elements */
+  z-index: 1100; /* Ensure the arrow is above other elements */
+}
+
+/* InfoDrawerLeft.css */
+.info-drawer-left .drawer-content ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.info-drawer-left .drawer-content ul li {
+  margin: 5px 0;
 }
