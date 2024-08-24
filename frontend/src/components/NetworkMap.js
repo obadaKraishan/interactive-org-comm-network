@@ -1,7 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
 
 const NetworkMap = ({ data, onNodeClick }) => {
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
+
   useEffect(() => {
     d3.select("#network-map").selectAll("*").remove();
 
@@ -14,17 +16,21 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .append("svg")
       .attr("width", width)
       .attr("height", height)
-      .call(
-        d3.zoom().on("zoom", (event) => svg.attr("transform", event.transform))
-      )
       .append("g");
 
     const zoom = d3
       .zoom()
       .scaleExtent([0.5, 5])
-      .on("zoom", (event) => svg.attr("transform", event.transform));
+      .on("zoom", (event) => {
+        svg.attr("transform", event.transform);
+      });
 
-    d3.select("#network-map svg").call(zoom);
+    const svgElement = d3.select("#network-map svg");
+    svgElement.call(zoom);
+
+    // Initial zoom to center the map
+    const initialTransform = d3.zoomIdentity.translate(width / 2, height / 2).scale(1);
+    svgElement.call(zoom.transform, initialTransform);
 
     const colorScale = d3
       .scaleOrdinal()
@@ -32,23 +38,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
         "Executive Management",
         "Operations",
         "Product Development",
-        "Quality Assurance",
-        "Customer Support",
-        "Human Resources",
-        "Information Technology",
-        "Finance",
-        "Marketing",
-        "Sales",
-        "Legal",
-        "Compliance",
-        "Supply Chain",
-        "Research & Development",
-        "Public Relations",
-        "Business Analytics",
-        "Corporate Strategy",
-        "Procurement",
-        "Facilities Management",
-        "Security",
+        // Add other departments here
       ])
       .range(d3.schemeTableau10);
 
@@ -57,8 +47,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
         d.parent ? data.nodes.find((node) => node.id === d.parent).name : d.name
       );
       if (d.type === "manager") return d3.color(departmentColor).darker(1.5);
-      if (d.type === "team-leader")
-        return d3.color(departmentColor).darker(0.5);
+      if (d.type === "team-leader") return d3.color(departmentColor).darker(0.5);
       if (d.type === "member") return d3.color(departmentColor).brighter(0.5);
       return departmentColor;
     };
@@ -87,11 +76,11 @@ const NetworkMap = ({ data, onNodeClick }) => {
           .distance(120)
       )
       .force("charge", d3.forceManyBody().strength(-300))
-      .force("center", d3.forceCenter(width / 2, height / 2))
       .force(
         "collide",
         d3.forceCollide().radius((d) => nodeSize(d) + 10)
-      );
+      )
+      .on("tick", ticked);
 
     const link = svg
       .append("g")
@@ -112,7 +101,23 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .append("circle")
       .attr("r", (d) => nodeSize(d))
       .attr("fill", nodeColor)
-      .on("click", (event, d) => onNodeClick(d)) // Pass the node data on click
+      .attr("stroke", (d) => (d.id === selectedNodeId ? "#000" : null)) // Highlight selected node
+      .attr("stroke-width", (d) => (d.id === selectedNodeId ? 3 : 0))
+      .attr("class", (d) => (d.id === selectedNodeId ? "highlighted-node" : ""))
+      .on("click", (event, d) => {
+        onNodeClick(d);
+        setSelectedNodeId(d.id);
+
+        // Zoom to the clicked node
+        const scale = d3.zoomTransform(svg.node()).k;
+        const x = -d.x * scale + width / 2;
+        const y = -d.y * scale + height / 2;
+
+        svgElement
+          .transition()
+          .duration(750)
+          .call(zoom.transform, d3.zoomIdentity.translate(x, y).scale(scale));
+      })
       .call(
         d3
           .drag()
@@ -133,7 +138,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .attr("font-size", 12)
       .text((d) => d.name);
 
-    simulation.on("tick", () => {
+    function ticked() {
       link
         .attr("x1", (d) => d.source.x)
         .attr("y1", (d) => d.source.y)
@@ -143,7 +148,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
       node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
 
       label.attr("x", (d) => d.x).attr("y", (d) => d.y - 15);
-    });
+    }
 
     function dragstarted(event, d) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -181,7 +186,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .style("border", "none")
       .style("border-radius", "5px")
       .on("click", () => {
-        d3.select("#network-map svg").transition().call(zoom.scaleBy, 1.2);
+        svgElement.transition().call(zoom.scaleBy, 1.2);
       });
 
     controls
@@ -193,7 +198,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .style("border", "none")
       .style("border-radius", "5px")
       .on("click", () => {
-        d3.select("#network-map svg").transition().call(zoom.scaleBy, 0.8);
+        svgElement.transition().call(zoom.scaleBy, 0.8);
       });
 
     controls
@@ -205,11 +210,12 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .style("border", "none")
       .style("border-radius", "5px")
       .on("click", () => {
-        d3.select("#network-map svg")
+        svgElement
           .transition()
-          .call(zoom.transform, d3.zoomIdentity);
+          .call(zoom.transform, d3.zoomIdentity); // Reset the zoom and pan
       });
-  }, [data, onNodeClick]); // Ensure `onNodeClick` is a dependency
+
+  }, [data, onNodeClick, selectedNodeId]);
 
   return (
     <div

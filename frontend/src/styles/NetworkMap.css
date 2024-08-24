@@ -10,3 +10,9 @@
     height: 100%;
   }
   
+  .highlighted-node {
+    stroke: #9a9a9a; /* Black border for highlighted nodes */
+    stroke-width: 2px; /* Thickness of the border */
+    box-shadow: 0 0 10px rgba(116, 116, 116, 0.5); /* Optional: Add a shadow for extra emphasis */
+  }
+  
