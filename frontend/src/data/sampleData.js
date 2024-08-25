@@ -1,7 +1,7 @@
-import { executiveTeam } from './executiveTeam';
-import { departments } from './departments';
-import { teams } from './teams';
-import { members } from './members';
+const executiveTeam = require('./executiveTeam');
+const departments = require('./departments');
+const teams = require('./teams');
+const members = require('./members');
 
 const sampleData = {
   nodes: [
@@ -96,4 +96,4 @@ const sampleData = {
   ].map(link => ({ ...link, source: String(link.source), target: String(link.target) })) // Ensure all link sources and targets are strings
 };
 
-export default sampleData;
+module.exports = sampleData;

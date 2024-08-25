@@ -1,4 +1,4 @@
-export const departments = [
+const departments = [
     {
       id: '8',
       name: 'Operations',
@@ -134,3 +134,5 @@ export const departments = [
     }
   ];
   
+
+  module.exports = departments;

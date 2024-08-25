@@ -1,4 +1,4 @@
-export const executiveTeam = [
+const executiveTeam = [
     {
       id: '1',
       name: 'John Doe (CEO)',
@@ -50,3 +50,5 @@ export const executiveTeam = [
     }
   ];
   
+
+  module.exports = executiveTeam;

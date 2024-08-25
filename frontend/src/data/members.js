@@ -1,4 +1,4 @@
-export const members = [
+const members = [
   {
     id: "46",
     name: "Alice Johnson (Manager)",
@@ -324,3 +324,5 @@ export const members = [
       "Clark Kent assists in the maintenance of the company’s facilities, ensuring a safe and efficient work environment.",
   },
 ];
+
+module.exports = members;

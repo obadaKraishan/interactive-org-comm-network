@@ -1,4 +1,4 @@
-export const teams = [
+const teams = [
     {
       id: '27',
       name: 'Product Design Team',
@@ -153,3 +153,4 @@ export const teams = [
     }
   ];
   
+  module.exports = teams;
