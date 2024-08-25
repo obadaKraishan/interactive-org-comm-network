@@ -1,17 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../styles/InfoDrawerLeft.css';
+import { updateCommunicationData, postSubConnection } from '../services/api';
+import sampleData from '../data/sampleData';
 
 const InfoDrawerLeft = ({ isOpen, node, toggleDrawer, connections }) => {
-  console.log('Received Connections in Drawer:', connections);
+  const [editing, setEditing] = useState(false);
+  const [editedBrief, setEditedBrief] = useState(node?.brief || '');
+  const [selectedConnection, setSelectedConnection] = useState('');
 
-  const renderConnections = () => {
-    if (!connections || connections.length === 0) {
-      return <p>No connections found</p>;
+  const saveChanges = async () => {
+    try {
+      await updateCommunicationData(node.id, { brief: editedBrief });
+      setEditing(false);
+    } catch (error) {
+      console.error('Error updating communication:', error);
     }
+  };
 
-    return connections.map((connection, index) => (
-      <li key={index}>{connection?.name || 'Unnamed Node'}</li>  // Fallback for undefined names
-    ));
+  const addConnection = async () => {
+    try {
+      await postSubConnection({ source: node.id, target: selectedConnection, type: 'custom' });
+      setSelectedConnection('');
+    } catch (error) {
+      console.error('Error adding connection:', error);
+    }
   };
 
   return (
@@ -25,11 +37,39 @@ const InfoDrawerLeft = ({ isOpen, node, toggleDrawer, connections }) => {
         </div>
         {node && (
           <div className="drawer-content">
-            <p><strong>Brief:</strong> {node.brief}</p>
+            <p><strong>Brief:</strong></p>
+            {editing ? (
+              <>
+                <textarea value={editedBrief} onChange={(e) => setEditedBrief(e.target.value)} />
+                <button onClick={saveChanges}>Save</button>
+                <button onClick={() => setEditing(false)}>Cancel</button>
+              </>
+            ) : (
+              <>
+                <p>{node.brief}</p>
+                <button onClick={() => setEditing(true)}>Edit</button>
+              </>
+            )}
             <p><strong>Connections:</strong></p>
             <ul>
-              {renderConnections()}
+              {connections.map((connection, index) => (
+                <li key={index}>{connection?.name || 'Unnamed Node'}</li>
+              ))}
             </ul>
+            <div className="add-connection">
+              <select
+                value={selectedConnection}
+                onChange={(e) => setSelectedConnection(e.target.value)}
+              >
+                <option value="">Select a node to connect</option>
+                {sampleData.nodes.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.name} (ID: {n.id})
+                  </option>
+                ))}
+              </select>
+              <button onClick={addConnection}>Add Connection</button>
+            </div>
           </div>
         )}
       </div>
