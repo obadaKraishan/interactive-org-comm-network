@@ -11,3 +11,33 @@ export const getCommunicationData = async () => {
     throw error;
   }
 };
+
+export const postCommunicationData = async (data) => {
+  try {
+    const response = await axios.post(API_BASE_URL, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error posting communication data:', error);
+    throw error;
+  }
+};
+
+export const updateCommunicationData = async (id, data) => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating communication data:', error);
+    throw error;
+  }
+};
+
+export const deleteCommunicationData = async (id) => {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting communication data:', error);
+    throw error;
+  }
+};
