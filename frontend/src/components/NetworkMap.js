@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
-import { getSubConnections } from '../services/api'; // Add this import
+import { getSubConnections } from '../services/api';
 
 const NetworkMap = ({ data, onNodeClick }) => {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
-  const [subConnections, setSubConnections] = useState([]); // Add state for sub-connections
+  const [subConnections, setSubConnections] = useState([]);
 
   useEffect(() => {
-    d3.select("#network-map").selectAll("*").remove();
-
-    // Fetch sub-connections data
+    // Fetch sub-connections data when the component mounts
     const fetchSubConnections = async () => {
       try {
         const fetchedSubConnections = await getSubConnections();
@@ -19,8 +17,9 @@ const NetworkMap = ({ data, onNodeClick }) => {
       }
     };
 
-    fetchSubConnections();
+    fetchSubConnections(); // Fetch once on mount
 
+    // D3 Visualization Setup
     const container = document.getElementById("network-map");
     const width = container.clientWidth;
     const height = container.clientHeight;
@@ -214,7 +213,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
         svgElement.transition().call(zoom.scaleBy, 0.8);
       });
   
-    controls
+      controls
       .append("button")
       .text("Reset")
       .style("padding", "5px")
@@ -227,8 +226,13 @@ const NetworkMap = ({ data, onNodeClick }) => {
           .transition()
           .call(zoom.transform, d3.zoomIdentity); // Reset the zoom and pan
       });
-  }, [data, subConnections, onNodeClick, selectedNodeId]);
-  
+
+    // Cleanup function to remove the old SVG elements when the component unmounts or updates
+    return () => {
+      d3.select("#network-map").selectAll("*").remove();
+    };
+  }, [data, subConnections, onNodeClick]); // Only rerun the effect if `data`, `subConnections`, or `onNodeClick` change
+
   return (
     <div
       id="network-map"
@@ -242,7 +246,6 @@ const NetworkMap = ({ data, onNodeClick }) => {
       {/* D3.js visualization will be appended here */}
     </div>
   );
-  };
-  
-  export default NetworkMap;
-  
+};
+
+export default NetworkMap;
