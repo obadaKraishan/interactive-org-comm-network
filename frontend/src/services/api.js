@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api/communications';
+const API_BASE_URL = 'http://localhost:5001/api/communications';
 
 export const getCommunicationData = async () => {
   try {
