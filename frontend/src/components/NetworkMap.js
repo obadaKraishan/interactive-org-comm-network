@@ -1,11 +1,25 @@
 import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
+import { getSubConnections } from '../services/api'; // Add this import
 
 const NetworkMap = ({ data, onNodeClick }) => {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const [subConnections, setSubConnections] = useState([]); // Add state for sub-connections
 
   useEffect(() => {
     d3.select("#network-map").selectAll("*").remove();
+
+    // Fetch sub-connections data
+    const fetchSubConnections = async () => {
+      try {
+        const fetchedSubConnections = await getSubConnections();
+        setSubConnections(fetchedSubConnections);
+      } catch (error) {
+        console.error('Error fetching sub-connections:', error);
+      }
+    };
+
+    fetchSubConnections();
 
     const container = document.getElementById("network-map");
     const width = container.clientWidth;
@@ -28,7 +42,6 @@ const NetworkMap = ({ data, onNodeClick }) => {
     const svgElement = d3.select("#network-map svg");
     svgElement.call(zoom);
 
-    // Initial zoom to center the map
     const initialTransform = d3.zoomIdentity.translate(width / 2, height / 2).scale(1);
     svgElement.call(zoom.transform, initialTransform);
 
@@ -71,7 +84,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .force(
         "link",
         d3
-          .forceLink(data.links)
+          .forceLink([...data.links, ...subConnections]) // Combine links and sub-connections
           .id((d) => d.id)
           .distance(120)
       )
@@ -81,17 +94,17 @@ const NetworkMap = ({ data, onNodeClick }) => {
         d3.forceCollide().radius((d) => nodeSize(d) + 10)
       )
       .on("tick", ticked);
-
+  
     const link = svg
       .append("g")
       .attr("class", "links")
       .selectAll("line")
-      .data(data.links)
+      .data([...data.links, ...subConnections]) // Combine links and sub-connections
       .enter()
       .append("line")
       .attr("stroke", "#999")
       .attr("stroke-width", 2);
-
+  
     const node = svg
       .append("g")
       .attr("class", "nodes")
@@ -107,12 +120,12 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .on("click", (event, d) => {
         onNodeClick(d);
         setSelectedNodeId(d.id);
-
+  
         // Zoom to the clicked node
         const scale = d3.zoomTransform(svg.node()).k;
         const x = -d.x * scale + width / 2;
         const y = -d.y * scale + height / 2;
-
+  
         svgElement
           .transition()
           .duration(750)
@@ -125,7 +138,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
           .on("drag", dragged)
           .on("end", dragended)
       );
-
+  
     const label = svg
       .append("g")
       .attr("class", "labels")
@@ -137,36 +150,36 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .attr("text-anchor", "middle")
       .attr("font-size", 12)
       .text((d) => d.name);
-
+  
     function ticked() {
       link
         .attr("x1", (d) => d.source.x)
         .attr("y1", (d) => d.source.y)
         .attr("x2", (d) => d.target.x)
         .attr("y2", (d) => d.target.y);
-
+  
       node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
-
+  
       label.attr("x", (d) => d.x).attr("y", (d) => d.y - 15);
     }
-
+  
     function dragstarted(event, d) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
-
+  
     function dragged(event, d) {
       d.fx = event.x;
       d.fy = event.y;
     }
-
+  
     function dragended(event, d) {
       if (!event.active) simulation.alphaTarget(0);
       d.fx = null;
       d.fy = null;
     }
-
+  
     const controls = d3
       .select("#network-map")
       .append("div")
@@ -176,7 +189,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .style("display", "flex")
       .style("flex-direction", "column")
       .style("gap", "10px");
-
+  
     controls
       .append("button")
       .text("+")
@@ -188,7 +201,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .on("click", () => {
         svgElement.transition().call(zoom.scaleBy, 1.2);
       });
-
+  
     controls
       .append("button")
       .text("-")
@@ -200,7 +213,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .on("click", () => {
         svgElement.transition().call(zoom.scaleBy, 0.8);
       });
-
+  
     controls
       .append("button")
       .text("Reset")
@@ -214,9 +227,8 @@ const NetworkMap = ({ data, onNodeClick }) => {
           .transition()
           .call(zoom.transform, d3.zoomIdentity); // Reset the zoom and pan
       });
-
-  }, [data, onNodeClick, selectedNodeId]);
-
+  }, [data, subConnections, onNodeClick, selectedNodeId]);
+  
   return (
     <div
       id="network-map"
@@ -230,6 +242,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
       {/* D3.js visualization will be appended here */}
     </div>
   );
-};
-
-export default NetworkMap;
+  };
+  
+  export default NetworkMap;
+  
