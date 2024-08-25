@@ -52,16 +52,24 @@ const populateDatabase = async () => {
     // Create a lookup map for the new IDs using the original id as a key
     const idMap = {};
     insertedCommunications.forEach((communication) => {
+      console.log(`Inserted communication - Original ID: ${communication.id}, MongoDB ID: ${communication._id}`);
       idMap[communication.id] = communication._id.toString(); // Map original id to MongoDB's ObjectId string
     });
 
     // Log the idMap to ensure it contains the correct mappings
     console.log("ID Map:", idMap);
 
+    // Debugging: Print the full ID Map before starting the link mapping
+    console.log("Full ID Map:", idMap);
+
     // Populate SubConnections with correct ObjectIds
     const subConnections = sampleData.links.map((link) => {
       const sourceId = idMap[link.source];
       const targetId = idMap[link.target];
+
+      // Debugging: Log the source and target mapping attempts
+      console.log(`Attempting to map Source: ${link.source} -> ${idMap[link.source]}`);
+      console.log(`Attempting to map Target: ${link.target} -> ${idMap[link.target]}`);
 
       // Log to check if sourceId and targetId are being correctly retrieved
       console.log(`Mapping for link - Source: ${link.source}, Target: ${link.target}`);
