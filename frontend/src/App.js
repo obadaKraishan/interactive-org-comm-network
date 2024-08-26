@@ -53,28 +53,25 @@ function App() {
   // Get connections for the selected node
   const getConnections = (node) => {
     if (!node) return [];
-
-    const connections = data.links
-      .filter(link => link.source === node._id || link.target === node._id)
+  
+    return subConnections
+      .filter(link => link.source._id === node._id || link.target._id === node._id)
       .map(link => {
-        const connectedNodeId = link.source === node._id ? link.target : link.source;
+        const connectedNodeId = link.source._id === node._id ? link.target._id : link.source._id;
         return data.nodes.find(n => n._id === connectedNodeId);
-      })
-      .filter(connection => connection);
-
-    return connections;
+      });
   };
 
   // Recursively get all sub-items under the selected node
   const getSubItems = (node) => {
     if (!node) return [];
-
+  
     const subItems = data.nodes.filter(n => n.parent === node._id);
     const allSubItems = subItems.reduce((acc, subItem) => {
       acc.push(subItem);
-      return acc.concat(getSubItems(subItem)); // Recursively fetch sub-items
+      return acc.concat(getSubItems(subItem));
     }, []);
-
+  
     return allSubItems;
   };
 

@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/InfoDrawerLeft.css';
 import { updateCommunicationData, postSubConnection } from '../services/api';
 
 const InfoDrawerLeft = ({ isOpen, node, toggleDrawer, connections }) => {
   const [editing, setEditing] = useState(false);
-  const [editedBrief, setEditedBrief] = useState(node?.brief || '');
+  const [editedBrief, setEditedBrief] = useState('');
   const [selectedConnection, setSelectedConnection] = useState('');
+
+  useEffect(() => {
+    if (node) {
+      setEditedBrief(node.brief || '');
+    }
+  }, [node]);
 
   const saveChanges = async () => {
     try {
@@ -52,7 +58,10 @@ const InfoDrawerLeft = ({ isOpen, node, toggleDrawer, connections }) => {
             <p><strong>Connections:</strong></p>
             <ul>
               {connections.map((connection, index) => (
-                <li key={index}>{connection?.name || 'Unnamed Node'}</li>
+                <li key={index}>
+                  {connection?.name || 'Unnamed Node'} 
+                  <span className="connection-type">({connection.type})</span>
+                </li>
               ))}
             </ul>
             <div className="add-connection">
