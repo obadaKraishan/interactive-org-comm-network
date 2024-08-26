@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import '../styles/InfoDrawerRight.css';
 import { postSubConnection } from '../services/api';
-import sampleData from '../data/sampleData';
 
 const InfoDrawerRight = ({ isOpen, node, toggleDrawer, subItems }) => {
   const [newSubItem, setNewSubItem] = useState('');
 
   const addSubItem = async () => {
     try {
-      await postSubConnection({ source: node.id, target: newSubItem, type: 'sub-item' });
+      await postSubConnection({ source: node._id, target: newSubItem, type: 'sub-item' });
       setNewSubItem('');
     } catch (error) {
       console.error('Error adding sub-item:', error);
@@ -54,9 +53,9 @@ const InfoDrawerRight = ({ isOpen, node, toggleDrawer, subItems }) => {
                 onChange={(e) => setNewSubItem(e.target.value)}
               >
                 <option value="">Select a sub-item</option>
-                {sampleData.nodes.filter(n => n.parent !== node.id).map((n) => (
-                  <option key={n.id} value={n.id}>
-                    {n.name} (ID: {n.id})
+                {subItems.map((n) => (
+                  <option key={n._id} value={n._id}>
+                    {n.name} (ID: {n._id})
                   </option>
                 ))}
               </select>

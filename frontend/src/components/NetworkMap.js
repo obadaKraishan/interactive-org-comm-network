@@ -1,28 +1,17 @@
 import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
-import { getSubConnections } from '../services/api';
 
 const NetworkMap = ({ data, onNodeClick }) => {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
-  const [subConnections, setSubConnections] = useState([]);
 
   useEffect(() => {
-    // Fetch sub-connections data when the component mounts
-    const fetchSubConnections = async () => {
-      try {
-        const fetchedSubConnections = await getSubConnections();
-        setSubConnections(fetchedSubConnections);
-      } catch (error) {
-        console.error('Error fetching sub-connections:', error);
-      }
-    };
-
-    fetchSubConnections(); // Fetch once on mount
+    console.log("Data passed to the component:", data);
 
     // D3 Visualization Setup
     const container = document.getElementById("network-map");
     const width = container.clientWidth;
     const height = container.clientHeight;
+    console.log("Container dimensions:", { width, height });
 
     const svg = d3
       .select("#network-map")
@@ -50,13 +39,30 @@ const NetworkMap = ({ data, onNodeClick }) => {
         "Executive Management",
         "Operations",
         "Product Development",
-        // Add other departments here
+        "Quality Assurance",
+        "Customer Support",
+        "Human Resources",
+        "Information Technology",
+        "Finance",
+        "Marketing",
+        "Sales",
+        "Legal",
+        "Compliance",
+        "Supply Chain",
+        "Research & Development",
+        "Public Relations",
+        "Business Analytics",
+        "Corporate Strategy",
+        "Procurement",
+        "Facilities Management",
+        "Security"
       ])
       .range(d3.schemeTableau10);
 
     const nodeColor = (d) => {
+      console.log("Node color determination:", d);
       const departmentColor = colorScale(
-        d.parent ? data.nodes.find((node) => node.id === d.parent).name : d.name
+        d.parent ? data.nodes.find((node) => node._id === d.parent)._id : d.name
       );
       if (d.type === "manager") return d3.color(departmentColor).darker(1.5);
       if (d.type === "team-leader") return d3.color(departmentColor).darker(0.5);
@@ -64,27 +70,24 @@ const NetworkMap = ({ data, onNodeClick }) => {
       return departmentColor;
     };
 
-    const nodeDegree = {};
-    data.links.forEach((link) => {
-      nodeDegree[link.source] = (nodeDegree[link.source] || 0) + 1;
-      nodeDegree[link.target] = (nodeDegree[link.target] || 0) + 1;
-    });
-
     const nodeSize = (d) => {
-      if (d.type === "department") return Math.sqrt(nodeDegree[d.id] || 1) * 20;
-      if (d.type === "team") return Math.sqrt(nodeDegree[d.id] || 1) * 15;
-      if (d.type === "manager") return Math.sqrt(nodeDegree[d.id] || 1) * 10;
-      if (d.type === "team-leader") return Math.sqrt(nodeDegree[d.id] || 1) * 7;
-      return Math.sqrt(nodeDegree[d.id] || 1) * 5;
+      const linksCount = data.links.filter(link => link.source === d._id || link.target === d._id).length;
+      console.log("Node size calculation:", d, "Links count:", linksCount);
+      if (d.type === "department") return Math.sqrt(linksCount) * 20;
+      if (d.type === "team") return Math.sqrt(linksCount) * 15;
+      if (d.type === "manager") return Math.sqrt(linksCount) * 10;
+      if (d.type === "team-leader") return Math.sqrt(linksCount) * 7;
+      return Math.sqrt(linksCount) * 5;
     };
 
+    console.log("Starting D3 force simulation");
     const simulation = d3
       .forceSimulation(data.nodes)
       .force(
         "link",
         d3
-          .forceLink([...data.links, ...subConnections]) // Combine links and sub-connections
-          .id((d) => d.id)
+          .forceLink(data.links)
+          .id((d) => d._id)
           .distance(120)
       )
       .force("charge", d3.forceManyBody().strength(-300))
@@ -98,11 +101,13 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .append("g")
       .attr("class", "links")
       .selectAll("line")
-      .data([...data.links, ...subConnections]) // Combine links and sub-connections
+      .data(data.links)
       .enter()
       .append("line")
       .attr("stroke", "#999")
       .attr("stroke-width", 2);
+
+    console.log("Links created:", link);
 
     const node = svg
       .append("g")
@@ -113,12 +118,13 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .append("circle")
       .attr("r", (d) => nodeSize(d))
       .attr("fill", nodeColor)
-      .attr("stroke", (d) => (d.id === selectedNodeId ? "#000" : null)) // Highlight selected node
-      .attr("stroke-width", (d) => (d.id === selectedNodeId ? 3 : 0))
-      .attr("class", (d) => (d.id === selectedNodeId ? "highlighted-node" : ""))
+      .attr("stroke", (d) => (d._id === selectedNodeId ? "#000" : null)) // Highlight selected node
+      .attr("stroke-width", (d) => (d._id === selectedNodeId ? 3 : 0))
+      .attr("class", (d) => (d._id === selectedNodeId ? "highlighted-node" : ""))
       .on("click", (event, d) => {
+        console.log("Node clicked:", d);
         onNodeClick(d);
-        setSelectedNodeId(d.id);
+        setSelectedNodeId(d._id);
 
         // Zoom to the clicked node
         const scale = d3.zoomTransform(svg.node()).k;
@@ -138,6 +144,8 @@ const NetworkMap = ({ data, onNodeClick }) => {
           .on("end", dragended)
       );
 
+    console.log("Nodes created:", node);
+
     const label = svg
       .append("g")
       .attr("class", "labels")
@@ -150,11 +158,20 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .attr("font-size", 12)
       .text((d) => d.name);
 
+    console.log("Labels created:", label);
+
     function ticked() {
+      console.log("Tick event triggered");
       link
-        .attr("x1", (d) => d.source.x)
+        .attr("x1", (d) => {
+          console.log("Link source:", d.source);
+          return d.source.x;
+        })
         .attr("y1", (d) => d.source.y)
-        .attr("x2", (d) => d.target.x)
+        .attr("x2", (d) => {
+          console.log("Link target:", d.target);
+          return d.target.x;
+        })
         .attr("y2", (d) => d.target.y);
 
       node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
@@ -163,17 +180,20 @@ const NetworkMap = ({ data, onNodeClick }) => {
     }
 
     function dragstarted(event, d) {
+      console.log("Drag started:", d);
       if (!event.active) simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
 
     function dragged(event, d) {
+      console.log("Dragging:", d);
       d.fx = event.x;
       d.fy = event.y;
     }
 
     function dragended(event, d) {
+      console.log("Drag ended:", d);
       if (!event.active) simulation.alphaTarget(0);
       d.fx = null;
       d.fy = null;
@@ -227,11 +247,14 @@ const NetworkMap = ({ data, onNodeClick }) => {
           .call(zoom.transform, d3.zoomIdentity); // Reset the zoom and pan
       });
 
+    console.log("Setup complete, waiting for ticks");
+
     // Cleanup function to remove the old SVG elements when the component unmounts or updates
     return () => {
+      console.log("Cleaning up SVG elements");
       d3.select("#network-map").selectAll("*").remove();
     };
-  }, [data, onNodeClick]); // Only rerun the effect if `data` or `onNodeClick` change
+  }, [data, onNodeClick, selectedNodeId]); // Add `selectedNodeId` to the dependency array
 
   return (
     <div

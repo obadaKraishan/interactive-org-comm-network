@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import '../styles/InfoDrawerLeft.css';
 import { updateCommunicationData, postSubConnection } from '../services/api';
-import sampleData from '../data/sampleData';
 
 const InfoDrawerLeft = ({ isOpen, node, toggleDrawer, connections }) => {
   const [editing, setEditing] = useState(false);
@@ -10,7 +9,7 @@ const InfoDrawerLeft = ({ isOpen, node, toggleDrawer, connections }) => {
 
   const saveChanges = async () => {
     try {
-      await updateCommunicationData(node.id, { brief: editedBrief });
+      await updateCommunicationData(node._id, { brief: editedBrief });
       setEditing(false);
     } catch (error) {
       console.error('Error updating communication:', error);
@@ -19,7 +18,7 @@ const InfoDrawerLeft = ({ isOpen, node, toggleDrawer, connections }) => {
 
   const addConnection = async () => {
     try {
-      await postSubConnection({ source: node.id, target: selectedConnection, type: 'custom' });
+      await postSubConnection({ source: node._id, target: selectedConnection, type: 'custom' });
       setSelectedConnection('');
     } catch (error) {
       console.error('Error adding connection:', error);
@@ -62,9 +61,9 @@ const InfoDrawerLeft = ({ isOpen, node, toggleDrawer, connections }) => {
                 onChange={(e) => setSelectedConnection(e.target.value)}
               >
                 <option value="">Select a node to connect</option>
-                {sampleData.nodes.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    {n.name} (ID: {n.id})
+                {connections.map((n) => (
+                  <option key={n._id} value={n._id}>
+                    {n.name} (ID: {n._id})
                   </option>
                 ))}
               </select>
