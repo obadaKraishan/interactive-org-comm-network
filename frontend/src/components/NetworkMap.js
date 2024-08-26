@@ -5,13 +5,9 @@ const NetworkMap = ({ data, onNodeClick }) => {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
 
   useEffect(() => {
-    console.log("Data passed to the component:", data);
-
-    // D3 Visualization Setup
     const container = document.getElementById("network-map");
     const width = container.clientWidth;
     const height = container.clientHeight;
-    console.log("Container dimensions:", { width, height });
 
     const svg = d3
       .select("#network-map")
@@ -62,7 +58,6 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .range(d3.schemeTableau10);
 
     const nodeColor = (d) => {
-      console.log("Node color determination:", d);
       const departmentColor = colorScale(
         d.parent
           ? data.nodes.find((node) => node._id === d.parent.toString())._id
@@ -79,7 +74,6 @@ const NetworkMap = ({ data, onNodeClick }) => {
       const linksCount = data.links.filter(
         (link) => link.source._id === d._id || link.target._id === d._id
       ).length;
-      console.log("Node size calculation:", d, "Links count:", linksCount);
       if (d.type === "department") return Math.sqrt(linksCount) * 20;
       if (d.type === "team") return Math.sqrt(linksCount) * 15;
       if (d.type === "manager") return Math.sqrt(linksCount) * 10;
@@ -87,32 +81,65 @@ const NetworkMap = ({ data, onNodeClick }) => {
       return Math.sqrt(linksCount) * 5;
     };
 
-    // Arrange nodes in a radial pattern before the simulation
-    data.nodes.forEach((node, i) => {
-      const angle = (i / data.nodes.length) * Math.PI * 2;
-      node.x = width / 2 + Math.cos(angle) * 300; // Adjust the radius as needed
-      node.y = height / 2 + Math.sin(angle) * 300;
+    // Arrange nodes in a radial pattern with CEO at the center
+    const centerNode = data.nodes.find((node) => node.type === "CEO");
+    const executiveNodes = data.nodes.filter(
+      (node) => node.type === "executive"
+    );
+    const departmentNodes = data.nodes.filter(
+      (node) => node.type === "department"
+    );
+    const teamNodes = data.nodes.filter((node) => node.type === "team");
+
+    // Set the CEO at the center
+    if (centerNode) {
+      centerNode.x = width / 2;
+      centerNode.y = height / 2;
+    }
+
+    // Arrange executive nodes around the CEO
+    const execRadius = 150;
+    executiveNodes.forEach((node, i) => {
+      const angle = (i / executiveNodes.length) * 2 * Math.PI;
+      node.x = width / 2 + execRadius * Math.cos(angle);
+      node.y = height / 2 + execRadius * Math.sin(angle);
     });
 
-    console.log("Starting D3 force simulation");
+    // Arrange departments around the executives
+    const deptRadius = 300;
+    departmentNodes.forEach((node, i) => {
+      const angle = (i / departmentNodes.length) * 2 * Math.PI;
+      node.x = width / 2 + deptRadius * Math.cos(angle);
+      node.y = height / 2 + deptRadius * Math.sin(angle);
+    });
+
+    // Arrange teams around their respective departments
+    const teamRadius = 450;
+    teamNodes.forEach((node, i) => {
+      const departmentNode = data.nodes.find(
+        (dep) => dep._id === node.parent
+      );
+      if (departmentNode) {
+        const angle = (i / teamNodes.length) * 2 * Math.PI;
+        node.x = departmentNode.x + teamRadius * Math.cos(angle);
+        node.y = departmentNode.y + teamRadius * Math.sin(angle);
+      }
+    });
+
     const simulation = d3
       .forceSimulation(data.nodes)
-      .alpha(1) // Start with a high alpha value
       .force(
         "link",
         d3
           .forceLink(data.links)
           .id((d) => d._id)
-          .distance(120)
+          .distance(150)
       )
-      .force("charge", d3.forceManyBody().strength(-100)) // Reduced repulsion to prevent excessive spreading
+      .force("charge", d3.forceManyBody().strength(-50))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force(
-        "collide",
-        d3.forceCollide().radius((d) => nodeSize(d) + 30) // Increased collide radius
-      )
-      .alphaDecay(0.03) // Slower decay rate
-      .velocityDecay(0.2) // Reduced velocity decay for smoother stabilization
+      .force("collide", d3.forceCollide().radius((d) => nodeSize(d) + 20))
+      .alphaDecay(0.05)
+      .velocityDecay(0.4)
       .on("tick", ticked);
 
     const link = svg
@@ -135,13 +162,10 @@ const NetworkMap = ({ data, onNodeClick }) => {
         if (!sourceNode || !targetNode) {
           console.error("Link source or target not found:", d);
         } else {
-          // Assign the source and target node objects directly to the link
           d.source = sourceNode;
           d.target = targetNode;
         }
       });
-
-    console.log("Links created:", link);
 
     const node = svg
       .append("g")
@@ -152,17 +176,13 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .append("circle")
       .attr("r", (d) => nodeSize(d))
       .attr("fill", nodeColor)
-      .attr("stroke", (d) => (d._id === selectedNodeId ? "#000" : null)) // Highlight selected node
+      .attr("stroke", (d) => (d._id === selectedNodeId ? "#000" : null))
       .attr("stroke-width", (d) => (d._id === selectedNodeId ? 3 : 0))
-      .attr("class", (d) =>
-        d._id === selectedNodeId ? "highlighted-node" : ""
-      )
+      .attr("class", (d) => (d._id === selectedNodeId ? "highlighted-node" : ""))
       .on("click", (event, d) => {
-        console.log("Node clicked:", d);
         onNodeClick(d);
         setSelectedNodeId(d._id);
 
-        // Zoom to the clicked node
         const scale = d3.zoomTransform(svg.node()).k;
         const x = -d.x * scale + width / 2;
         const y = -d.y * scale + height / 2;
@@ -180,8 +200,6 @@ const NetworkMap = ({ data, onNodeClick }) => {
           .on("end", dragended)
       );
 
-    console.log("Nodes created:", node);
-
     const label = svg
       .append("g")
       .attr("class", "labels")
@@ -194,11 +212,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .attr("font-size", 12)
       .text((d) => d.name);
 
-    console.log("Labels created:", label);
-
     function ticked() {
-      console.log("Tick event triggered");
-
       link
         .attr("x1", (d) => d.source.x)
         .attr("y1", (d) => d.source.y)
@@ -211,20 +225,17 @@ const NetworkMap = ({ data, onNodeClick }) => {
     }
 
     function dragstarted(event, d) {
-      console.log("Drag started:", d);
       if (!event.active) simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
 
     function dragged(event, d) {
-      console.log("Dragging:", d);
       d.fx = event.x;
       d.fy = event.y;
     }
 
     function dragended(event, d) {
-      console.log("Drag ended:", d);
       if (!event.active) simulation.alphaTarget(0);
       d.fx = null;
       d.fy = null;
@@ -273,17 +284,13 @@ const NetworkMap = ({ data, onNodeClick }) => {
       .style("border", "none")
       .style("border-radius", "5px")
       .on("click", () => {
-        svgElement.transition().call(zoom.transform, d3.zoomIdentity); // Reset the zoom and pan
+        svgElement.transition().call(zoom.transform, d3.zoomIdentity);
       });
 
-    console.log("Setup complete, waiting for ticks");
-
-    // Cleanup function to remove the old SVG elements when the component unmounts or updates
     return () => {
-      console.log("Cleaning up SVG elements");
       d3.select("#network-map").selectAll("*").remove();
     };
-  }, [data, onNodeClick, selectedNodeId]); // Add selectedNodeId to the dependency array
+  }, [data, onNodeClick, selectedNodeId]);
 
   return (
     <div
@@ -295,7 +302,6 @@ const NetworkMap = ({ data, onNodeClick }) => {
         overflow: "hidden",
       }}
     >
-      {/* D3.js visualization will be appended here */}
     </div>
   );
 };
