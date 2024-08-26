@@ -42,13 +42,13 @@ const populateDatabase = async () => {
     const insertedCommunications = await Communication.insertMany(
       communications.map((communication) => {
         const parentId = communication.parent ? idMap[communication.parent] : null;
-        return { ...communication, id: String(communication.id), parent: parentId ? mongoose.Types.ObjectId(parentId) : null };
+        return { ...communication, id: String(communication.id), parent: parentId ? new mongoose.Types.ObjectId(parentId.toString()) : null };
       })
     );
 
-    // Populate the ID map with the new MongoDB ObjectId values
+    // Populate the ID map with the new MongoDB ObjectId values, using names or titles as keys
     insertedCommunications.forEach((communication) => {
-      idMap[communication.id] = communication._id.toString(); // Map original id to MongoDB's ObjectId string
+      idMap[communication.name] = communication._id.toString(); // Map original name to MongoDB's ObjectId string
     });
 
     // Log the idMap to ensure it contains the correct mappings
@@ -56,26 +56,25 @@ const populateDatabase = async () => {
 
     // Populate SubConnections with correct ObjectIds
     const subConnections = sampleData.links.map((link) => {
-      const sourceId = idMap[link.source];
-      const targetId = idMap[link.target];
+      const sourceName = sampleData.nodes.find(node => node.id === link.source).name;
+      const targetName = sampleData.nodes.find(node => node.id === link.target).name;
+
+      const sourceId = idMap[sourceName];
+      const targetId = idMap[targetName];
 
       // Debugging: Log the source and target mapping attempts
-      console.log(`Attempting to map Source: ${link.source} -> ${idMap[link.source]}`);
-      console.log(`Attempting to map Target: ${link.target} -> ${idMap[link.target]}`);
-
-      // Log to check if sourceId and targetId are being correctly retrieved
-      console.log(`Mapping for link - Source: ${link.source}, Target: ${link.target}`);
-      console.log(`Mapped IDs - Source: ${sourceId}, Target: ${targetId}`);
+      console.log(`Attempting to map Source: ${sourceName} -> ${sourceId}`);
+      console.log(`Attempting to map Target: ${targetName} -> ${targetId}`);
 
       if (!sourceId || !targetId) {
-        console.error(`Invalid ID mapping - Source: ${link.source}, Target: ${link.target}`);
+        console.error(`Invalid ID mapping - Source: ${sourceName}, Target: ${targetName}`);
         console.error("Full ID Map:", idMap); // Log full idMap for more context
-        throw new Error(`Invalid ID mapping - Source: ${link.source}, Target: ${link.target}`);
+        throw new Error(`Invalid ID mapping - Source: ${sourceName}, Target: ${targetName}`);
       }
 
       return {
-        source: mongoose.Types.ObjectId(sourceId), // Convert back to ObjectId
-        target: mongoose.Types.ObjectId(targetId), // Convert back to ObjectId
+        source: new mongoose.Types.ObjectId(sourceId.toString()), // Correctly create ObjectId instances
+        target: new mongoose.Types.ObjectId(targetId.toString()), // Correctly create ObjectId instances
         type: "communication",
       };
     });
