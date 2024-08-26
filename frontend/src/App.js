@@ -67,14 +67,16 @@ function App() {
     if (!node) return [];
   
     const subItems = data.nodes.filter(n => n.parent === node._id);
-    const allSubItems = subItems.reduce((acc, subItem) => {
-      acc.push(subItem);
-      return acc.concat(getSubItems(subItem));
-    }, []);
+    const allSubItems = subItems.map(subItem => ({
+      ...subItem,
+      children: getSubItems(subItem) // Add children recursively
+    }));
   
+    console.log('Sub-items:', allSubItems); // Log sub-items to verify the structure
     return allSubItems;
   };
-
+  
+  
   return (
     <div className="app">
       <Header toggleDrawer={toggleDrawer} />

@@ -18,18 +18,19 @@ const InfoDrawerRight = ({ isOpen, node, toggleDrawer, subItems }) => {
     if (!items || items.length === 0) {
       return <p>No sub-items found</p>;
     }
-
+  
     return items.map((item, index) => (
       <li key={index}>
         {item.name}
         {item.children && item.children.length > 0 && (
           <ul>
-            {renderSubItems(item.children)}
+            {renderSubItems(item.children)} 
           </ul>
         )}
       </li>
     ));
   };
+  
 
   return (
     <div>
@@ -70,7 +71,7 @@ const InfoDrawerRight = ({ isOpen, node, toggleDrawer, subItems }) => {
         </div>
       )}
     </div>
-  );
+  );  
 };
 
 export default InfoDrawerRight;

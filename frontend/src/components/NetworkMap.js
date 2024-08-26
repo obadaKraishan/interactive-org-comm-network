@@ -87,9 +87,17 @@ const NetworkMap = ({ data, onNodeClick }) => {
       return Math.sqrt(linksCount) * 5;
     };
 
+    // Arrange nodes in a radial pattern before the simulation
+    data.nodes.forEach((node, i) => {
+      const angle = (i / data.nodes.length) * Math.PI * 2;
+      node.x = width / 2 + Math.cos(angle) * 300; // Adjust the radius as needed
+      node.y = height / 2 + Math.sin(angle) * 300;
+    });
+
     console.log("Starting D3 force simulation");
     const simulation = d3
       .forceSimulation(data.nodes)
+      .alpha(1) // Start with a high alpha value
       .force(
         "link",
         d3
@@ -97,15 +105,17 @@ const NetworkMap = ({ data, onNodeClick }) => {
           .id((d) => d._id)
           .distance(120)
       )
-      .force("charge", d3.forceManyBody().strength(-300))
+      .force("charge", d3.forceManyBody().strength(-100)) // Reduced repulsion to prevent excessive spreading
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force(
         "collide",
-        d3.forceCollide().radius((d) => nodeSize(d) + 10)
+        d3.forceCollide().radius((d) => nodeSize(d) + 30) // Increased collide radius
       )
+      .alphaDecay(0.03) // Slower decay rate
+      .velocityDecay(0.2) // Reduced velocity decay for smoother stabilization
       .on("tick", ticked);
 
-      const link = svg
+    const link = svg
       .append("g")
       .attr("class", "links")
       .selectAll("line")
@@ -121,7 +131,7 @@ const NetworkMap = ({ data, onNodeClick }) => {
         const targetNode = data.nodes.find(
           (node) => node._id === d.target._id.toString()
         );
-    
+
         if (!sourceNode || !targetNode) {
           console.error("Link source or target not found:", d);
         } else {
@@ -130,9 +140,8 @@ const NetworkMap = ({ data, onNodeClick }) => {
           d.target = targetNode;
         }
       });
-    
+
     console.log("Links created:", link);
-    
 
     const node = svg
       .append("g")
@@ -189,15 +198,15 @@ const NetworkMap = ({ data, onNodeClick }) => {
 
     function ticked() {
       console.log("Tick event triggered");
-    
+
       link
         .attr("x1", (d) => d.source.x)
         .attr("y1", (d) => d.source.y)
         .attr("x2", (d) => d.target.x)
         .attr("y2", (d) => d.target.y);
-    
+
       node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
-    
+
       label.attr("x", (d) => d.x).attr("y", (d) => d.y - 15);
     }
 
