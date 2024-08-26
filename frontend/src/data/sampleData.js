@@ -3,13 +3,17 @@ const departments = require('./departments');
 const teams = require('./teams');
 const members = require('./members');
 
+// Combine all entities and ensure their IDs are strings
 const sampleData = {
   nodes: [
     ...executiveTeam,
     ...departments,
     ...teams,
     ...members,
-  ].map(node => ({ ...node, id: String(node.id) })),  // Ensure all node ids are strings
+  ].map(node => {
+    console.log(`Node ID: ${node.id}, Node Name: ${node.name}`);
+    return { ...node, id: String(node.id) };
+  }),  // Ensure all node ids are strings
   links: [
     // Executive-Level Communication
     { source: '1', target: '2' },
@@ -93,7 +97,10 @@ const sampleData = {
     { source: '79', target: '45' },
     { source: '80', target: '45' },
     { source: '81', target: '45' },
-  ].map(link => ({ ...link, source: String(link.source), target: String(link.target) })) // Ensure all link sources and targets are strings
+  ].map(link => {
+    console.log(`Link Source: ${link.source}, Link Target: ${link.target}`);
+    return { ...link, source: String(link.source), target: String(link.target) };
+  }) // Ensure all link sources and targets are strings
 };
 
 module.exports = sampleData;

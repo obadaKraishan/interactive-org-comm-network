@@ -16,7 +16,8 @@ const CommunicationSchema = new mongoose.Schema({
     type: String,
   },
   parent: {
-    type: String, // Use ObjectId if referencing other documents
+    type: mongoose.Schema.Types.ObjectId, // Updated to reference another Communication document
+    ref: 'Communication', // Added reference
   },
 });
 

@@ -2,12 +2,13 @@ const Communication = require('../models/Communication');
 
 exports.getAllCommunications = async (req, res) => {
   try {
-    const communications = await Communication.find();
+    const communications = await Communication.find().populate('parent'); // Ensure parent is populated
     res.status(200).json(communications);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch communications' });
   }
 };
+
 
 exports.createCommunication = async (req, res) => {
   try {

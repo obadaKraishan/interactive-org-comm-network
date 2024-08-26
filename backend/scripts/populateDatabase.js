@@ -14,10 +14,7 @@ const sampleData = require("../../frontend/src/data/sampleData.js");
 console.log("MONGO_URI:", process.env.MONGO_URI);
 
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB connected...");
     populateDatabase();
@@ -40,27 +37,22 @@ const populateDatabase = async () => {
       ...members,
     ];
 
-    // Ensure all IDs are strings
-    communications.forEach((communication) => {
-      communication.id = String(communication.id);
-      console.log(`Preparing to insert: ${JSON.stringify(communication)}`);
-    });
-
-    // Insert communications into the database
-    const insertedCommunications = await Communication.insertMany(communications);
-
-    // Create a lookup map for the new IDs using the original id as a key
+    // Insert communications into the database and create a lookup map for IDs
     const idMap = {};
+    const insertedCommunications = await Communication.insertMany(
+      communications.map((communication) => {
+        const parentId = communication.parent ? idMap[communication.parent] : null;
+        return { ...communication, id: String(communication.id), parent: parentId ? mongoose.Types.ObjectId(parentId) : null };
+      })
+    );
+
+    // Populate the ID map with the new MongoDB ObjectId values
     insertedCommunications.forEach((communication) => {
-      console.log(`Inserted communication - Original ID: ${communication.id}, MongoDB ID: ${communication._id}`);
       idMap[communication.id] = communication._id.toString(); // Map original id to MongoDB's ObjectId string
     });
 
     // Log the idMap to ensure it contains the correct mappings
     console.log("ID Map:", idMap);
-
-    // Debugging: Print the full ID Map before starting the link mapping
-    console.log("Full ID Map:", idMap);
 
     // Populate SubConnections with correct ObjectIds
     const subConnections = sampleData.links.map((link) => {
