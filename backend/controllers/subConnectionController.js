@@ -4,8 +4,8 @@ const SubConnection = require('../models/SubConnection');
 exports.getAllSubConnections = async (req, res) => {
   try {
     const subConnections = await SubConnection.find()
-      .populate('source')
-      .populate('target');
+      .populate('source', '_id name')  // populate only necessary fields
+      .populate('target', '_id name');
     res.status(200).json(subConnections);
   } catch (error) {
     console.error('Error fetching sub-connections:', error);
